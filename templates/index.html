@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 200px;
+            padding: 5px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        button {
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .attempt {
+            display: inline-block;
+            width: 25px;
+            margin-right: 5px;
+        }
+
+        .attempts-container {
+            margin-bottom: 10px;
+        }
+
+        #error {
+            color: red;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        let attempts = 0;
+
+        function createAttemptElement(text) {
+            const attemptElement = document.createElement('div');
+            attemptElement.classList.add('attempt');
+            attemptElement.innerText = text;
+            return attemptElement;
+        }
+
+        async function checkWord() {
+            const word = document.getElementById('word').value;
+            const guess = document.getElementById('guess').value;
+            const response = await fetch('/check', {
+                method: 'POST',
+                body: new FormData(document.getElementById('wordleForm'))
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                document.getElementById('error').innerText = data.error;
+                return;
+            }
+
+            attempts++;
+            document.getElementById('attempts').innerText = 'Attempts: ' + attempts;
+
+            const resultElement = createAttemptElement(data.result);
+            document.getElementById('attempts-container').appendChild(resultElement);
+
+            if (data.guessed) {
+                alert('Congratulations, you guessed the word!');
+                document.getElementById('reveal').innerText = 'The word was: ' + word;
+                document.getElementById('wordleForm').style.display = 'none';
+            } else {
+                document.getElementById('guess').value = '';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Wordle Clone</h1>
+    <form id="wordleForm" onsubmit="event.preventDefault(); checkWord();">
+        <input type="hidden" id="word" name="word" value="{{ word }}">
+        <input type="text" id="guess" name="guess" maxlength="5" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="error"></div>
+    <div id="attempts-container" class="attempts-container"></div>
+    <p id="attempts">Attempts: 0</p>
+    <p id="reveal"></p>
+</body>
+</html>
+
